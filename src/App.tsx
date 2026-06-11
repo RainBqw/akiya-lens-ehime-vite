@@ -73,11 +73,8 @@ export default function App() {
         };
       })
     );
-    const addProperty = (newProperty: any) => {
-  setProperties((prev) => [newProperty, ...prev]);
-  setSelectedId(newProperty.propertyId);
-};
-``
+
+
   setForm({
     roofDamage: false,
     wallDamage: false,
@@ -91,7 +88,10 @@ export default function App() {
     imageName: ""
     });
   };
-
+  const addProperty = (newProperty: any) => {
+  setProperties((prev) => [newProperty, ...prev]);
+  setSelectedId(newProperty.propertyId);
+};
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -119,9 +119,9 @@ export default function App() {
           <StatCard icon={BarChart3} label="平均リスク" value={avgScore} tone="bg-emerald-50 text-emerald-600" />
         </section>
 
-<div className="mt-6">
-  <AddPropertyForm onAdd={addProperty} />
-</div>
+      <div className="mt-6">
+        <AddPropertyForm onAdd={addProperty} />
+      </div>
 
         <HighRiskList
           properties={properties}
