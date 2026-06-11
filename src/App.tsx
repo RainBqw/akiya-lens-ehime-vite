@@ -4,7 +4,7 @@ import { initialProperties } from "@/data/sampleProperties";
 import { calculateRiskScore, levelClass } from "@/lib/riskScore";
 import { AddPropertyForm } from "@/components/AddPropertyForm";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect,useMemo, useState } from "react";
 import { Home, AlertTriangle, ClipboardCheck, ArrowUpRight, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { StatCard } from "@/components/StatCard";
@@ -14,10 +14,20 @@ import { InspectionForm } from "@/components/InspectionForm";
 import { HighRiskList } from "@/components/HighRiskList";
 import { ReportPreview } from "@/components/ReportPreview";
 
-
+const STORAGE_KEY = "akiya-lens-ehime-properties";
 
 export default function App() {
-  const [properties, setProperties] = useState(initialProperties);
+  const [properties, setProperties] = useState(() => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return initialProperties;
+  } catch {
+    return initialProperties;
+  }
+});
   const [selectedId, setSelectedId] = useState("P002");
   const [query, setQuery] = useState("");
   const [form, setForm] = useState({
@@ -45,7 +55,13 @@ export default function App() {
   const avgScore = Math.round(properties.reduce((sum, p) => sum + p.currentRiskScore, 0) / properties.length);
 
   const preview = calculateRiskScore(form);
-
+  useEffect(() => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(properties));
+  } catch {
+    console.warn("localStorageへの保存に失敗しました");
+  }
+}, [properties]);
   const submitInspection = () => {
     const result = calculateRiskScore(form);
     const today = new Date().toISOString().slice(0, 10);
@@ -65,7 +81,6 @@ export default function App() {
               score: result.score,
               level: result.level,
               comment: form.comment || "点検フォームから登録された記録。",
-              imagePreview: form.imagePreview,
               imageName: form.imageName
 
             }
