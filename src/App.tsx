@@ -2,7 +2,7 @@
 // @ts-nocheck
 import { initialProperties } from "@/data/sampleProperties";
 import { calculateRiskScore, levelClass } from "@/lib/riskScore";
-
+import { AddPropertyForm } from "@/components/AddPropertyForm";
 
 import React, { useMemo, useState } from "react";
 import { Home, AlertTriangle, ClipboardCheck, ArrowUpRight, BarChart3 } from "lucide-react";
@@ -73,6 +73,11 @@ export default function App() {
         };
       })
     );
+    const addProperty = (newProperty: any) => {
+  setProperties((prev) => [newProperty, ...prev]);
+  setSelectedId(newProperty.propertyId);
+};
+``
   setForm({
     roofDamage: false,
     wallDamage: false,
@@ -113,6 +118,10 @@ export default function App() {
           <StatCard icon={ClipboardCheck} label="要対応" value={actionCount} tone="bg-orange-50 text-orange-600" />
           <StatCard icon={BarChart3} label="平均リスク" value={avgScore} tone="bg-emerald-50 text-emerald-600" />
         </section>
+
+<div className="mt-6">
+  <AddPropertyForm onAdd={addProperty} />
+</div>
 
         <HighRiskList
           properties={properties}
