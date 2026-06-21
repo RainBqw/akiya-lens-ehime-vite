@@ -1,10 +1,23 @@
+import { useEffect, useState } from "react";
 import { levelClass } from "@/lib/riskScore";
 
 type PropertyDetailProps = {
   property: any;
+  onUpdateVacancyStatus?: (propertyId: string, vacancyStatus: string) => void;
 };
 
-export function PropertyDetail({ property }: PropertyDetailProps) {
+export function PropertyDetail({
+  property,
+  onUpdateVacancyStatus,
+}: PropertyDetailProps) {
+  const [selectedVacancyStatus, setSelectedVacancyStatus] = useState(
+    property.vacancyStatus || "空き家候補"
+  );
+
+  useEffect(() => {
+    setSelectedVacancyStatus(property.vacancyStatus || "空き家候補");
+  }, [property.propertyId, property.vacancyStatus]);
+
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -12,9 +25,84 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
           <h2 className="text-2xl font-bold">
             {property.propertyId} {property.city} {property.area}
           </h2>
+
           <p className="mt-1 text-sm text-slate-500">
             {property.buildingType} / {property.ownerStatus} / {property.status}
           </p>
+
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-xs font-semibold text-slate-400">
+                空き家判定ステータス
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-700">
+                {property.vacancyStatus || "未設定"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-xs font-semibold text-slate-400">
+                発見経路
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-700">
+                {property.discoverySource || "未設定"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 md:col-span-2">
+              <p className="text-xs font-semibold text-slate-400">
+                空き家候補理由
+              </p>
+              <p className="mt-1 text-sm text-slate-700">
+                {property.vacancyReason || "未登録"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+            <p className="text-xs font-semibold text-slate-400">
+              判定ステータスを更新
+            </p>
+
+            <div className="mt-3 flex flex-col gap-3 md:flex-row">
+              <select
+                value={selectedVacancyStatus}
+                onChange={(e) => setSelectedVacancyStatus(e.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-slate-900"
+              >
+                <option>空き家候補</option>
+                <option>現地確認中</option>
+                <option>所有者確認中</option>
+                <option>空き家確認済み</option>
+                <option>空き家ではない</option>
+                <option>管理対象外</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={() =>
+                  onUpdateVacancyStatus?.(
+                    property.propertyId,
+                    selectedVacancyStatus
+                  )
+                }
+                className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-700"
+              >
+                更新する
+              </button>
+            </div>
+
+            {property.isVacantConfirmed && (
+              <div className="mt-3 rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-700">
+                この物件は空き家確認済みです。
+                {property.confirmedAt && (
+                  <span className="ml-2">
+                    確認日時: {property.confirmedAt.slice(0, 10)}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -25,6 +113,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
           >
             {property.riskLevel}
           </span>
+
           <span className="rounded-2xl bg-slate-900 px-4 py-2 text-white font-bold">
             {property.currentRiskScore}
           </span>
@@ -60,8 +149,9 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                 </div>
 
                 <p className="mt-1 text-sm text-slate-600">{item.comment}</p>
+
                 {item.imagePreview && (
-                    <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-2">
+                  <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-2">
                     <p className="mb-2 text-xs text-slate-500">
                       点検写真：{item.imageName}
                     </p>
@@ -69,9 +159,15 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                       src={item.imagePreview}
                       alt="点検写真"
                       className="max-h-56 w-full rounded-xl object-cover"
-    />
-  </div>
-)}
+                    />
+                  </div>
+                )}
+
+                {!item.imagePreview && item.imageName && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    登録写真ファイル名：{item.imageName}
+                  </p>
+                )}
               </div>
             </div>
           ))}

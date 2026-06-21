@@ -47,3 +47,26 @@ export async function createInspection(propertyId: string, inspection: any) {
 
   return response.json();
 }
+export async function updateVacancyStatus(
+  propertyId: string,
+  payload: {
+    vacancyStatus: string;
+    confirmedBy: string;
+  }
+) {
+  const response = await fetch(
+    `${API_BASE_URL}/properties/${propertyId}/vacancy-status`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("空き家判定ステータスの更新に失敗しました");
+  }
+
+}

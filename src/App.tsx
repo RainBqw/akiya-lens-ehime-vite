@@ -17,7 +17,8 @@ import {
   fetchProperties,
   createProperty,
   createInspection,
-} from "@/lib/api";
+  updateVacancyStatus,
+} from"@/lib/api"
 
 export default function App() {
   const [properties, setProperties] = useState(initialProperties);
@@ -136,7 +137,29 @@ const [apiError, setApiError] = useState("");
     setApiError("空き家登録に失敗しました。");
   }
 };
+  const updatePropertyVacancyStatus = async (
+  propertyId: string,
+  vacancyStatus: string
+) => {
+  try {
+    setApiError("");
 
+    await updateVacancyStatus(propertyId, {
+      vacancyStatus,
+      confirmedBy: "管理者",
+    });
+
+    const data = await fetchProperties();
+
+    if (Array.isArray(data) && data.length > 0) {
+      setProperties(data);
+      setSelectedId(propertyId);
+    }
+  } catch (error) {
+    console.error(error);
+    setApiError("空き家判定ステータスの更新に失敗しました。");
+  }
+};
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -194,7 +217,12 @@ const [apiError, setApiError] = useState("");
         />
 
           <div className="lg:col-span-3 space-y-6">
-            <PropertyDetail property={selected} />
+            
+<PropertyDetail
+  property={selected}
+  onUpdateVacancyStatus={updatePropertyVacancyStatus}
+/>
+
 
             <InspectionForm
              form={form}

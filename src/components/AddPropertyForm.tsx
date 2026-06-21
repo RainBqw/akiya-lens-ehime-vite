@@ -13,32 +13,40 @@ export function AddPropertyForm({ onAdd }: AddPropertyFormProps) {
   const [ownerStatus, setOwnerStatus] = useState("所有者確認中");
   const [status, setStatus] = useState("経過観察");
 
+  const [vacancyStatus, setVacancyStatus] = useState("空き家候補");
+  const [discoverySource, setDiscoverySource] = useState("巡回で発見");
+  const [vacancyReason, setVacancyReason] = useState("");
+
   const handleSubmit = () => {
     if (!city.trim() || !area.trim()) {
       alert("市町名とエリアを入力してください");
       return;
     }
 
-    const now = new Date().toISOString().slice(0, 10);
+    if (!vacancyReason.trim()) {
+      alert("空き家候補理由を入力してください");
+      return;
+    }
+
+    const now = new Date().toISOString();
 
     const newProperty = {
-      propertyId: `P${Date.now().toString().slice(-4)}`,
       city,
       area,
       buildingType,
       ownerStatus,
       status,
+
+      vacancyStatus,
+      discoverySource,
+      vacancyReason,
+      confirmedAt: "",
+      confirmedBy: "",
+      isVacantConfirmed: vacancyStatus === "空き家確認済み",
+
       currentRiskScore: 0,
       riskLevel: "低リスク",
       lastInspectionAt: now,
-      inspections: [
-        {
-          date: now,
-          score: 0,
-          level: "低リスク",
-          comment: "新規登録された空き家です。初回点検は未実施です。",
-        },
-      ],
     };
 
     onAdd(newProperty);
@@ -48,6 +56,9 @@ export function AddPropertyForm({ onAdd }: AddPropertyFormProps) {
     setBuildingType("木造戸建て");
     setOwnerStatus("所有者確認中");
     setStatus("経過観察");
+    setVacancyStatus("空き家候補");
+    setDiscoverySource("巡回で発見");
+    setVacancyReason("");
     setIsOpen(false);
   };
 
@@ -55,9 +66,9 @@ export function AddPropertyForm({ onAdd }: AddPropertyFormProps) {
     <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold">空き家の新規登録</h2>
+          <h2 className="text-lg font-bold">空き家候補の新規登録</h2>
           <p className="text-sm text-slate-500">
-            管理対象の空き家を追加します
+            発見情報と確認状況を記録し、管理対象候補として登録します
           </p>
         </div>
 
@@ -74,7 +85,7 @@ export function AddPropertyForm({ onAdd }: AddPropertyFormProps) {
           ) : (
             <>
               <Plus className="mr-1 inline h-4 w-4" />
-              空き家を追加
+              空き家候補を登録
             </>
           )}
         </button>
@@ -140,6 +151,41 @@ export function AddPropertyForm({ onAdd }: AddPropertyFormProps) {
 
           <div>
             <label className="text-sm font-semibold text-slate-700">
+              発見経路
+            </label>
+            <select
+              value={discoverySource}
+              onChange={(e) => setDiscoverySource(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-slate-900"
+            >
+              <option>巡回で発見</option>
+              <option>住民通報</option>
+              <option>自治会情報</option>
+              <option>既存台帳</option>
+              <option>その他</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-slate-700">
+              空き家判定ステータス
+            </label>
+            <select
+              value={vacancyStatus}
+              onChange={(e) => setVacancyStatus(e.target.value)}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-slate-900"
+            >
+              <option>空き家候補</option>
+              <option>現地確認中</option>
+              <option>所有者確認中</option>
+              <option>空き家確認済み</option>
+              <option>空き家ではない</option>
+              <option>管理対象外</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-slate-700">
               対応ステータス
             </label>
             <select
@@ -154,13 +200,25 @@ export function AddPropertyForm({ onAdd }: AddPropertyFormProps) {
             </select>
           </div>
 
-          <div className="flex items-end">
+          <div className="md:col-span-2">
+            <label className="text-sm font-semibold text-slate-700">
+              空き家候補理由
+            </label>
+            <textarea
+              value={vacancyReason}
+              onChange={(e) => setVacancyReason(e.target.value)}
+              placeholder="例：郵便物がたまっており、雑草が繁茂している。近隣から人の出入りがないとの情報あり。"
+              className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:border-slate-900"
+            />
+          </div>
+
+          <div className="md:col-span-2 flex justify-end">
             <button
               type="button"
               onClick={handleSubmit}
-              className="w-full rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-700"
+              className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-700"
             >
-              登録する
+              候補として登録する
             </button>
           </div>
         </div>
