@@ -13,21 +13,16 @@ import { PropertyDetail } from "@/components/PropertyDetail";
 import { InspectionForm } from "@/components/InspectionForm";
 import { HighRiskList } from "@/components/HighRiskList";
 import { ReportPreview } from "@/components/ReportPreview";
-
-const STORAGE_KEY = "akiya-lens-ehime-properties";
+import {
+  fetchProperties,
+  createProperty,
+  createInspection,
+} from "@/lib/api";
 
 export default function App() {
-  const [properties, setProperties] = useState(() => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return initialProperties;
-  } catch {
-    return initialProperties;
-  }
-});
+  const [properties, setProperties] = useState(initialProperties);
+const [isLoading, setIsLoading] = useState(false);
+const [apiError, setApiError] = useState("");
   const [selectedId, setSelectedId] = useState("P002");
   const [query, setQuery] = useState("");
   const [form, setForm] = useState({
@@ -56,57 +51,92 @@ export default function App() {
 
   const preview = calculateRiskScore(form);
   useEffect(() => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(properties));
-  } catch {
-    console.warn("localStorageへの保存に失敗しました");
-  }
-}, [properties]);
-  const submitInspection = () => {
-    const result = calculateRiskScore(form);
-    const today = new Date().toISOString().slice(0, 10);
-    setProperties((prev) =>
-      prev.map((p) => {
-        if (p.propertyId !== selected.propertyId) return p;
-        return {
-          ...p,
-          currentRiskScore: result.score,
-          riskLevel: result.level,
-          lastInspectionAt: today,
-          status: result.score >= 60 ? "未対応" : "経過観察",
-          inspections: [
-            ...p.inspections,
-            {
-              date: today,
-              score: result.score,
-              level: result.level,
-              comment: form.comment || "点検フォームから登録された記録。",
-              imageName: form.imageName
+  const loadProperties = async () => {
+    try {
+      setIsLoading(true);
+      setApiError("");
 
-            }
-          ]
-        };
-      })
-    );
+      const data = await fetchProperties();
 
-
-  setForm({
-    roofDamage: false,
-    wallDamage: false,
-    overgrown: false,
-    roadImpact: false,
-    garbage: false,
-    worseThanBefore: false,
-    notInspectedLong: false,
-    comment: "",
-    imagePreview: "",
-    imageName: ""
-    });
+      if (Array.isArray(data) && data.length > 0) {
+        setProperties(data);
+        setSelectedId(data[0].propertyId);
+      }
+    } catch (error) {
+      console.error(error);
+      setApiError(
+        "DynamoDBから空き家情報を取得できませんでした。ローカルのサンプルデータを表示しています。"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
-  const addProperty = (newProperty: any) => {
-  setProperties((prev) => [newProperty, ...prev]);
-  setSelectedId(newProperty.propertyId);
+
+  loadProperties();
+}, []);
+
+  const submitInspection = async () => {
+  const result = calculateRiskScore(form);
+
+  const inspectionPayload = {
+    score: result.score,
+    level: result.level,
+    comment: form.comment || "点検フォームから登録された記録。",
+    imageName: form.imageName || "",
+    checkedItems: {
+      roofDamage: form.roofDamage,
+      wallDamage: form.wallDamage,
+      overgrown: form.overgrown,
+      roadImpact: form.roadImpact,
+      garbage: form.garbage,
+      worseThanBefore: form.worseThanBefore,
+      notInspectedLong: form.notInspectedLong,
+    },
+  };
+
+  try {
+    setApiError("");
+
+    await createInspection(selected.propertyId, inspectionPayload);
+
+    const data = await fetchProperties();
+
+    if (Array.isArray(data) && data.length > 0) {
+      setProperties(data);
+      setSelectedId(selected.propertyId);
+    }
+
+    setForm({
+      roofDamage: false,
+      wallDamage: false,
+      overgrown: false,
+      roadImpact: false,
+      garbage: false,
+      worseThanBefore: false,
+      notInspectedLong: false,
+      comment: "",
+      imagePreview: "",
+      imageName: "",
+    });
+  } catch (error) {
+    console.error(error);
+    setApiError("点検登録に失敗しました。");
+  }
 };
+  const addProperty = async (newProperty: any) => {
+  try {
+    setApiError("");
+
+    const created = await createProperty(newProperty);
+
+    setProperties((prev) => [created, ...prev]);
+    setSelectedId(created.propertyId);
+  } catch (error) {
+    console.error(error);
+    setApiError("空き家登録に失敗しました。");
+  }
+};
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -127,6 +157,17 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-7xl px-5 py-6">
+      {isLoading && (
+  <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
+    DynamoDBからデータを取得しています...
+  </div>
+)}
+
+{apiError && (
+  <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+    {apiError}
+  </div>
+)}
         <section className="grid gap-4 md:grid-cols-4">
           <StatCard icon={Home} label="登録空き家数" value={properties.length} tone="bg-blue-50 text-blue-600" />
           <StatCard icon={AlertTriangle} label="緊急確認" value={emergencyCount} tone="bg-red-50 text-red-600" />
