@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { levelClass } from "@/lib/riskScore";
+import { getRiskReasons, getScoreDiff } from "@/lib/riskReasons";
 
 type PropertyDetailProps = {
   property: any;
@@ -17,7 +18,12 @@ export function PropertyDetail({
   useEffect(() => {
     setSelectedVacancyStatus(property.vacancyStatus || "空き家候補");
   }, [property.propertyId, property.vacancyStatus]);
+  const latestInspection =
+  property.inspections?.[property.inspections.length - 1];
 
+  const riskReasons = getRiskReasons(latestInspection?.checkedItems);
+
+  const scoreDiff = getScoreDiff(property.inspections);
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -103,6 +109,50 @@ export function PropertyDetail({
               </div>
             )}
           </div>
+          <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+          <p className="text-xs font-semibold text-slate-400">
+          最新リスクの理由
+          </p>
+
+          {riskReasons.length > 0 ? (
+          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+          {riskReasons.map((reason) => (
+          <li key={reason} className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-slate-900" />
+          {reason}
+          </li>
+          ))}
+          </ul>
+           ) : (
+            <p className="mt-2 text-sm text-slate-500">
+             最新点検ではリスク要因のチェックはありません。
+            </p>
+         )}
+
+          {scoreDiff && (
+          <div className="mt-4 rounded-2xl bg-slate-50 p-3 text-sm">
+         <p className="font-semibold text-slate-700">
+        前回との差分
+       </p>
+
+      <p className="mt-1 text-slate-600">
+        前回 {scoreDiff.previousScore}点 → 今回 {scoreDiff.latestScore}点
+        <span
+          className={
+            scoreDiff.diff > 0
+              ? "ml-2 font-bold text-red-600"
+              : scoreDiff.diff < 0
+              ? "ml-2 font-bold text-emerald-600"
+              : "ml-2 font-bold text-slate-600"
+          }
+        >
+          {scoreDiff.diff > 0 ? `+${scoreDiff.diff}点` : `${scoreDiff.diff}点`}
+          ・{scoreDiff.trend}
+        </span>
+      </p>
+    </div>
+  )}
+</div>
         </div>
 
         <div className="flex items-center gap-2">
