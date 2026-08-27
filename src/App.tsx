@@ -5,7 +5,7 @@ import { calculateRiskScore, levelClass } from "@/lib/riskScore";
 import { AddPropertyForm } from "@/components/AddPropertyForm";
 
 import React, { useEffect,useMemo, useState } from "react";
-import { Home, AlertTriangle, ClipboardCheck, ArrowUpRight, BarChart3 } from "lucide-react";
+import { Home, AlertTriangle, ClipboardCheck, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { StatCard } from "@/components/StatCard";
 import { PropertyList } from "@/components/PropertyList";
@@ -233,15 +233,7 @@ const [apiError, setApiError] = useState("");
 
               <ReportPreview property={selected} />
 
-            <section className="rounded-2xl bg-slate-900 p-5 text-white shadow-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-bold">U-22向けアピール</h2>
-                  <p className="mt-1 text-sm text-slate-300">単発の通報ではなく、空き家ごとの点検履歴をカルテ化し、限られた人員で優先対応できる仕組みです。</p>
-                </div>
-                <ArrowUpRight className="h-8 w-8 text-slate-300" />
-              </div>
-            </section>
+
           </div>
         </section>
       </main>
