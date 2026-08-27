@@ -16,15 +16,18 @@ export function PropertyDetail({
   );
 
   useEffect(() => {
-    setSelectedVacancyStatus(property.vacancyStatus || "空き家候補");
-  }, [property.propertyId, property.vacancyStatus]);
-  const latestInspection =
-  property.inspections?.[property.inspections.length - 1];
+  setSelectedVacancyStatus(property.vacancyStatus || "空き家候補");
+}, [property.propertyId, property.vacancyStatus]);
 
-  const riskReasons = getRiskReasons(latestInspection?.checkedItems);
+const inspections = Array.isArray(property.inspections)
+  ? property.inspections
+  : [];
 
-  const scoreDiff = getScoreDiff(property.inspections);
-  return (
+const latestInspection = inspections[inspections.length - 1];
+const riskReasons = getRiskReasons(latestInspection?.checkedItems);
+const scoreDiff = getScoreDiff(inspections);
+
+return (
     <section className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
