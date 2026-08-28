@@ -24,6 +24,7 @@ export default function App() {
   const [properties, setProperties] = useState(initialProperties);
 const [isLoading, setIsLoading] = useState(false);
 const [apiError, setApiError] = useState("");
+const [successMessage, setSuccessMessage] = useState("");
   const [selectedId, setSelectedId] = useState("P002");
   const [query, setQuery] = useState("");
   const [form, setForm] = useState({
@@ -119,6 +120,7 @@ const [apiError, setApiError] = useState("");
       imagePreview: "",
       imageName: "",
     });
+    showSuccessMessage("点検記録を登録しました。");
   } catch (error) {
     console.error(error);
     setApiError("点検登録に失敗しました。");
@@ -132,6 +134,7 @@ const [apiError, setApiError] = useState("");
 
     setProperties((prev) => [created, ...prev]);
     setSelectedId(created.propertyId);
+    showSuccessMessage("空き家候補を登録しました。");
   } catch (error) {
     console.error(error);
     setApiError("空き家登録に失敗しました。");
@@ -155,10 +158,18 @@ const [apiError, setApiError] = useState("");
       setProperties(data);
       setSelectedId(propertyId);
     }
+    showSuccessMessage(`判定ステータスを「${vacancyStatus}」に更新しました。`);
   } catch (error) {
     console.error(error);
     setApiError("空き家判定ステータスの更新に失敗しました。");
   }
+};
+const showSuccessMessage = (message: string) => {
+  setSuccessMessage(message);
+
+  window.setTimeout(() => {
+    setSuccessMessage("");
+  }, 5000);
 };
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -189,6 +200,24 @@ const [apiError, setApiError] = useState("");
 {apiError && (
   <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
     {apiError}
+  </div>
+)}
+{successMessage && (
+  <div
+    role="status"
+    aria-live="polite"
+    className="fixed bottom-4 left-4 right-4 z-50 flex items-center gap-4 rounded-2xl border border-emerald-200 bg-white px-5 py-4 text-sm font-semibold text-emerald-700 shadow-xl sm:left-auto sm:right-5 sm:max-w-sm"
+  >
+    <span className="flex-1">{successMessage}</span>
+
+    <button
+      type="button"
+      onClick={() => setSuccessMessage("")}
+      className="rounded-lg px-2 py-1 text-emerald-700 hover:bg-emerald-50"
+      aria-label="通知を閉じる"
+    >
+      ×
+    </button>
   </div>
 )}
         <section className="grid gap-4 md:grid-cols-4">
