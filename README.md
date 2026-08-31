@@ -2,6 +2,9 @@
 
 空き家候補の発見から現地確認、点検履歴、リスク評価までを一元管理する、自治体・地域団体向けの空き家カルテWebアプリです。
 
+## 画面イメージ
+
+![Akiya Lens Ehime ダッシュボード](public
 ## 公開URL
 
 https://main.d3luqpeygid7np.amplifyapp.com/
