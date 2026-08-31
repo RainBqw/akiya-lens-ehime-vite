@@ -4,7 +4,7 @@
 
 ## 画面イメージ
 
-![Akiya Lens Ehime ダッシュボード](public
+![Akiya Lens Ehime ダッシュボード](public/screenshots/dashboard.png)
 ## 公開URL
 
 https://main.d3luqpeygid7np.amplifyapp.com/
