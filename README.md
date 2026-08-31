@@ -1,73 +1,372 @@
-# React + TypeScript + Vite
+# Akiya Lens Ehime
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+空き家候補の発見から現地確認、点検履歴、リスク評価までを一元管理する、自治体・地域団体向けの空き家カルテWebアプリです。
 
-Currently, two official plugins are available:
+## 公開URL
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+https://main.d3luqpeygid7np.amplifyapp.com/
 
-## React Compiler
+> 公開デモでは架空の物件情報を使用しています。実在する住所や個人情報は登録しないでください。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 作品概要
 
-## Expanding the ESLint configuration
+空き家への対応では、住民からの通報や巡回によって建物が発見されても、過去の点検記録が分散し、前回からどの程度悪化したのか、どの物件を優先して確認すべきか判断しにくいという課題があります。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Akiya Lens Ehimeでは、発見された建物を最初から空き家と断定せず、まず「空き家候補」として登録します。
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+発見経路、候補とした理由、点検項目、コメント、リスクスコア、過去の点検履歴を物件ごとのカルテとして蓄積し、確認状況に応じて「現地確認中」「所有者確認中」「空き家確認済み」などの判定ステータスへ更新できます。
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+これにより、限られた巡回人員でも、状態が悪化している物件や周辺への影響が大きい物件から優先して対応できるよう支援します。
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 想定利用者
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 自治体の空き家対策担当者
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- 管理対象となる空き家候補の一覧確認
+- リスクスコアに基づく対応優先度の判断
+- 空き家判定ステータスの管理
+- 所有者への説明に使う点検情報の確認
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 地域団体・巡回担当者
+
+- 巡回中に発見した空き家候補の登録
+- 現地で確認した状態の記録
+- 点検項目とコメントの登録
+- 過去の点検結果との比較
+
+### 空き家の所有者
+
+- 自治体や巡回担当者が記録した状態の確認
+- 必要な対応内容の把握
+
+## 主な機能
+
+### 空き家候補の登録
+
+以下の情報を入力して、建物を空き家候補として登録できます。
+
+- 市町名
+- エリア
+- 建物種別
+- 所有者確認状況
+- 発見経路
+- 空き家判定ステータス
+- 対応ステータス
+- 空き家候補理由
+
+### 空き家判定ステータスの管理
+
+建物の確認状況を、次のステータスで管理できます。
+
+- 空き家候補
+- 現地確認中
+- 所有者確認中
+- 空き家確認済み
+- 空き家ではない
+- 管理対象外
+
+「空き家確認済み」に更新した場合は、確認日時と確認者もDynamoDBに保存します。
+
+### 点検記録の登録
+
+現地確認で見つかった状態をチェック形式で登録できます。
+
+- 屋根破損
+- 外壁破損
+- 雑草の繁茂
+- 道路への影響
+- ごみの放置
+- 前回点検からの悪化
+- 長期間未点検
+
+点検コメントと写真ファイル名も記録できます。
+
+### リスクスコアの自動計算
+
+点検項目に応じてリスクスコアを計算し、次の分類で表示します。
+
+- 低リスク
+- 要観察
+- 要対応
+- 緊急確認
+
+### リスク理由の表示
+
+最新点検で選択された項目を日本語に変換し、「なぜこのスコアになったのか」を表示します。
+
+例：
+
+- 屋根破損あり
+- 外壁破損あり
+- 道路への影響あり
+- 前回より悪化
+
+### 前回点検との差分表示
+
+直近2回の点検スコアを比較し、悪化・改善・変化なしを表示します。
+
+例：
+
+text
+前回 68点 → 今回 90点
++22点・悪化
+
+
+### 高リスク物件の優先表示
+
+登録された物件をリスクスコア順に並べ、優先して確認すべき物件を上位に表示します。
+
+### 点検タイムライン
+
+物件ごとの点検履歴を時系列で表示し、状態の変化を確認できます。
+
+### 成功通知
+
+空き家候補の登録、点検記録の登録、判定ステータスの更新に成功した場合、画面右下に通知を表示します。
+
+### 複数端末でのデータ共有
+
+空き家情報と点検履歴はAmazon DynamoDBに保存されます。
+
+ローカルブラウザ内だけに保存する方式ではなく、異なる端末やブラウザから同じ情報を確認できます。
+
+## 利用の流れ
+
+text
+1. 巡回や住民通報で建物を発見
+2. 「空き家候補」として登録
+3. 発見経路と候補理由を記録
+4. 現地で点検項目とコメントを登録
+5. リスクスコアとリスク理由を確認
+6. 前回点検との差分を確認
+7. 管理者が空き家判定ステータスを更新
+8. 空き家確認済みの物件を継続的に管理
+
+
+## システム構成
+
+text
+利用者のブラウザ
+        |
+        v
+React / TypeScript / Vite
+        |
+        v
+AWS Amplify Hosting
+        |
+        v
+Amazon API Gateway
+        |
+        v
+AWS Lambda（Python）
+        |
+        v
+Amazon DynamoDB
+
+
+## AWSサービスの役割
+
+### AWS Amplify Hosting
+
+React/Viteで構築したフロントエンドをビルドし、Webアプリとして公開しています。
+
+### Amazon API Gateway
+
+フロントエンドから送信されたHTTPリクエストを受け付け、Lambda関数へ渡します。
+
+### AWS Lambda
+
+Pythonで実装したAPI処理を実行します。
+
+主な処理は以下です。
+
+- 空き家一覧の取得
+- 空き家候補の登録
+- 点検履歴の登録
+- 最新リスク情報の更新
+- 空き家判定ステータスの更新
+
+### Amazon DynamoDB
+
+空き家情報と点検履歴を永続保存します。
+
+## API
+
+http
+GET /properties
+
+
+空き家情報と点検履歴の一覧を取得します。
+
+http
+POST /properties
+
+
+新しい空き家候補を登録します。
+
+http
+POST /properties/{propertyId}/inspections
+
+
+指定した物件に点検履歴を追加し、最新リスク情報を更新します。
+
+http
+PUT /properties/{propertyId}/vacancy-status
+
+
+指定した物件の空き家判定ステータスを更新します。
+
+## DynamoDBテーブル設計
+
+### AkiyaLensProperties
+
+空き家候補・空き家の現在の状態を保存します。
+
+パーティションキー：
+
+text
+propertyId
+
+
+主な属性：
+
+- `propertyId`: 空き家管理ID
+- `city`: 市町名
+- `area`: エリア
+- `buildingType`: 建物種別
+- `ownerStatus`: 所有者確認状況
+- `status`: 対応ステータス
+- `vacancyStatus`: 空き家判定ステータス
+- `discoverySource`: 発見経路
+- `vacancyReason`: 空き家候補理由
+- `isVacantConfirmed`: 空き家確認済みフラグ
+- `confirmedAt`: 確認日時
+- `confirmedBy`: 確認者
+- `currentRiskScore`: 最新リスクスコア
+- `riskLevel`: 最新リスク分類
+- `lastInspectionAt`: 最終点検日時
+- `createdAt`: 登録日時
+- `updatedAt`: 更新日時
+
+### AkiyaLensInspections
+
+物件ごとの点検履歴を保存します。
+
+パーティションキー：
+
+text
+propertyId
+
+
+ソートキー：
+
+text
+inspectionAt
+
+
+主な属性：
+
+- `propertyId`: 対象物件ID
+- `inspectionAt`: 点検日時
+- `inspectionId`: 点検記録ID
+- `score`: 点検時のリスクスコア
+- `level`: 点検時のリスク分類
+- `comment`: 点検コメント
+- `imageName`: 写真ファイル名
+- `checkedItems`: 点検項目
+- `createdAt`: 記録作成日時
+
+## 使用技術
+
+### フロントエンド
+
+- TypeScript
+- React
+- Vite
+- Tailwind CSS
+- Framer Motion
+- Lucide React
+
+### バックエンド
+
+- Python
+- AWS Lambda
+- Amazon API Gateway
+
+### データベース
+
+- Amazon DynamoDB
+
+### ホスティング・開発
+
+- AWS Amplify Hosting
+- Git
+- GitHub
+- npm
+- PowerShell
+- Visual Studio Code
+
+## 工夫した点
+
+### 空き家と即断しない業務フロー
+
+発見された建物を最初から空き家と断定せず、「空き家候補」として登録する設計にしました。
+
+その後、現地確認や所有者確認を経て判定ステータスを更新することで、判断の根拠を残せるようにしています。
+
+### 単発の通報ではなくカルテとして管理
+
+1回の通報や点検だけで終わらせず、物件ごとに点検履歴を時系列で蓄積します。
+
+前回点検との差分を表示することで、状態の悪化や改善を把握できます。
+
+### 説明可能なリスクスコア
+
+リスクスコアだけでなく、スコアに影響した点検項目を表示します。
+
+利用者が「なぜ緊急確認になったのか」を確認できるようにしました。
+
+### サーバーレス構成
+
+Amplify Hosting、API Gateway、Lambda、DynamoDBを利用し、サーバーを常時管理せずにデータ保存と共有を実現しました。
+
+## 開発中に苦労した点
+
+- Next.js静的出力のアセット配信問題
+- Viteへの移行
+- Amplify Hostingのビルド設定
+- IAMロールとLambda実行権限
+- API GatewayとLambdaのルーティング
+- CORS設定
+- DynamoDBのテーブル設計
+- LambdaのPythonインデントと構文エラー
+- ローカル環境と本番環境の環境変数管理
+- 複数端末で共有できるデータ保存への移行
+
+これらを一つずつ切り分け、最終的にAWS上で動作するサーバーレスWebアプリとして完成させました。
+
+## 現在の制約
+
+- 公開デモでは認証機能を実装していません
+- URLを知っている利用者がデータを操作できる可能性があります
+- 実在する住所や所有者情報は登録しない前提です
+- 写真はファイル名のみDynamoDBに保存しています
+- リスクスコアはプロトタイプ用のルールベース評価です
+- 自治体の正式な空き家認定や法的判断を行うものではありません
+
+## 今後の拡張
+
+- Amazon Cognitoによるログイン機能
+- 管理者・巡回者・閲覧者の権限分け
+- Amazon S3への点検写真保存
+- 署名付きURLによる安全な写真アップロード
+- 点検記録の編集・削除機能
+- 操作履歴と監査ログ
+- 市町・判定状態・リスク分類による絞り込み
+- 地図上での物件分布表示
+- 自治体・地域団体へのヒアリングによる評価基準改善
+- 実運用に向けたセキュリティ強化
+
+## 開発者
+
+SHIBA Raika
